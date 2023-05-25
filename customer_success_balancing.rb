@@ -7,44 +7,47 @@ class CustomerSuccessBalancing
     @customer_success = customer_success
     @customers = customers
     @away_customer_success = away_customer_success
-    @list_count_customers = []
   end
 
   # Returns the ID of the customer success with most customers
   def execute
-    @customer_success = fetch_available_customers unless @away_customer_success.nil?
+    available_customer_success = fetch_available_customers
 
-    customer_success = order_by_score(@customer_success)
+    list_customers = []
 
-    @customers_ordered = order_by_score(@customers) unless @customers.empty?
+    available_customer_success.each do |customer_s, index|
+      cs_customers = find_customers(customer_s, @customers)
+      @customers -= cs_customers
 
-    customer_success.each do |customer_s, index|
-      @list_count_customers.push(find_consumers(customer_s, @customers_ordered))
+      list_customers.push({
+        id: customer_s[:id],
+        count: cs_customers.count
+      })
     end
 
-    greater_customers = @list_count_customers.max_by { |customer| customer[:score]}
+    list_customers.uniq
 
-    greater_customers[:id]
+    greater_customers = list_customers.max_by { |customer | customer[:count]}
+
+    if greater_customers[:count] == 0
+      return 0
+    else
+      greater_customers[:id]
+    end
   end
 
   private
 
   def fetch_available_customers
-    @customer_success.delete_if { |customer| @away_customer_success.include? customer[:id]}
+    if (@away_customer_success.empty?)
+      return @customer_success
+    else
+      return @customer_success.reject! { |customer| @away_customer_success.include?(customer[:id]) }
+    end
   end
 
-  def order_by_score(customer)
-    customer.sort_by { |customer | customer[:score] }
-  end
-
-  def find_consumers(customer_s, customers)
+  def find_customers(customer_s, customers)
     customers.select { |customer| customer[:score] <= customer_s[:score]}
-    customers = customers.delete_if { |customer| customer[:score] <= customer_s[:score]}
-
-    return {
-      id: customer_s[:id],
-      score: customers.count
-    }
   end
 end
 
