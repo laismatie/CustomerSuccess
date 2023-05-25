@@ -7,15 +7,24 @@ class CustomerSuccessBalancing
     @customer_success = customer_success
     @customers = customers
     @away_customer_success = away_customer_success
+    @list_count_customers = []
   end
 
   # Returns the ID of the customer success with most customers
   def execute
     @customer_success = fetch_available_customers unless @away_customer_success.nil?
 
-    order_customers_success_by_score
+    customer_success = order_by_score(@customer_success)
 
-    order_customers_by_score unless @customers.empty?
+    @customers_ordered = order_by_score(@customers) unless @customers.empty?
+
+    customer_success.each do |customer_s, index|
+      @list_count_customers.push(find_consumers(customer_s, @customers_ordered))
+    end
+
+    greater_customers = @list_count_customers.max_by { |customer| customer[:score]}
+
+    greater_customers[:id]
   end
 
   private
@@ -24,14 +33,18 @@ class CustomerSuccessBalancing
     @customer_success.delete_if { |customer| @away_customer_success.include? customer[:id]}
   end
 
-  def sort_customers_success_by_score
-    available_customers = @customer_success
-    @customer_success.sort_by! { |available_customers, score| }.reverse
+  def order_by_score(customer)
+    customer.sort_by { |customer | customer[:score] }
   end
 
-  def sort_customers_success_by_score
-    customers = @customers
-    @customers.sort_by! { |customers, score| }.reverse
+  def find_consumers(customer_s, customers)
+    customers.select { |customer| customer[:score] <= customer_s[:score]}
+    customers = customers.delete_if { |customer| customer[:score] <= customer_s[:score]}
+
+    return {
+      id: customer_s[:id],
+      score: customers.count
+    }
   end
 end
 
