@@ -13,27 +13,18 @@ class CustomerSuccessBalancing
   def execute
     available_customer_success = fetch_available_customers
 
-    list_customers = []
+    @list_customers = []
 
-    available_customer_success.each do |customer_s, index|
-      cs_customers = find_customers(customer_s, @customers)
-      @customers -= cs_customers
+    spread_customer_success_customers(available_customer_success)
 
-      list_customers.push({
-        id: customer_s[:id],
-        count: cs_customers.count
-      })
-    end
+    max_customers = @list_customers.max_by { |customer | customer[:count]}
+    return 0 if max_customers[:count] == 0
 
-    list_customers.uniq
+    max_customers = @list_customers.select { |customer | customer[:count] == max_customers[:count]}
 
-    greater_customers = list_customers.max_by { |customer | customer[:count]}
+    return 0 if max_customers.count > 1
 
-    if greater_customers[:count] == 0
-      return 0
-    else
-      greater_customers[:id]
-    end
+    max_customers.first[:id]
   end
 
   private
@@ -43,6 +34,18 @@ class CustomerSuccessBalancing
       return @customer_success
     else
       return @customer_success.reject! { |customer| @away_customer_success.include?(customer[:id]) }
+    end
+  end
+
+  def spread_customer_success_customers(available_customers)
+    available_customers.each do |customer_s, index|
+      cs_customers = find_customers(customer_s, @customers)
+      @customers -= cs_customers
+
+      @list_customers.push({
+        id: customer_s[:id],
+        count: cs_customers.count
+      })
     end
   end
 
