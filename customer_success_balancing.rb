@@ -1,5 +1,6 @@
 require 'minitest/autorun'
 require 'timeout'
+require 'byebug'
 
 class CustomerSuccessBalancing
   def initialize(customer_success, customers, away_customer_success)
@@ -10,7 +11,27 @@ class CustomerSuccessBalancing
 
   # Returns the ID of the customer success with most customers
   def execute
-    # Write your solution here
+    @customer_success = fetch_available_customers unless @away_customer_success.nil?
+
+    order_customers_success_by_score
+
+    order_customers_by_score unless @customers.empty?
+  end
+
+  private
+
+  def fetch_available_customers
+    @customer_success.delete_if { |customer| @away_customer_success.include? customer[:id]}
+  end
+
+  def sort_customers_success_by_score
+    available_customers = @customer_success
+    @customer_success.sort_by! { |available_customers, score| }.reverse
+  end
+
+  def sort_customers_success_by_score
+    customers = @customers
+    @customers.sort_by! { |customers, score| }.reverse
   end
 end
 

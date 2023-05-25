@@ -1,10 +1,13 @@
+# Customer Success Balancing
+
 # Ruby
 
-## Como rodar os testes
+Versão do Ruby: 3.0.3
 
+## Como rodar os testes
 No terminal, execute os comandos:
+gem install minitest
 
 ```
-cd ruby
 ruby customer_success_balancing.rb
 ```
