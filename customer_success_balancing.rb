@@ -11,7 +11,8 @@ class CustomerSuccessBalancing
 
   # Returns the ID of the customer success with most customers
   def execute
-    available_customer_success = fetch_available_customers
+    available_customer_success = fetch_available_customers_success
+    available_customer_success.sort_by! { |consumer| consumer[:score] }
 
     @list_customers = []
 
@@ -29,22 +30,22 @@ class CustomerSuccessBalancing
 
   private
 
-  def fetch_available_customers
+  def fetch_available_customers_success
     if (@away_customer_success.empty?)
-      return @customer_success
+      @customer_success
     else
-      return @customer_success.reject! { |customer| @away_customer_success.include?(customer[:id]) }
+      @customer_success.reject! { |customer| @away_customer_success.include?(customer[:id]) }
     end
   end
 
-  def spread_customer_success_customers(available_customers)
-    available_customers.each do |customer_s, index|
-      cs_customers = find_customers(customer_s, @customers)
-      @customers -= cs_customers
+  def spread_customer_success_customers(available_customers_success)
+    available_customers_success.each do |customers_success, index|
+      customer_success_customers = find_customers(customers_success, @customers)
+      @customers -= customer_success_customers
 
       @list_customers.push({
-        id: customer_s[:id],
-        count: cs_customers.count
+        id: customers_success[:id],
+        count: customer_success_customers.count
       })
     end
   end
